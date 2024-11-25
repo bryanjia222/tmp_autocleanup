@@ -1,22 +1,22 @@
 #!/bin/bash
 
-# 定义目标目录，默认为当前目录
+# Define target directory, default is current directory
 target_directory="${1:-.}"
 
-# 获取当前脚本的名称
+# Get the current script name
 script_name="$(basename "$0")"
 
-# 查找超过1周未修改的文件或目录，仅限于当前目录下的文件或目录，并排除以"keep."开头的文件和当前脚本
+# Find files or directories not modified in the last 7 days, only in the current directory, excluding files starting with "keep." and the current script itself
 files_to_delete=$(find "$target_directory" -maxdepth 1 -mindepth 1 \( -type f -o -type d \) -mtime +7 ! -name 'keep.*' ! -name "$script_name" | sed 's|^\./||')
 
-# 如果没有找到符合条件的文件或目录，输出信息并退出
+# If no matching files or directories are found, output a message and exit
 if [ -z "$files_to_delete" ]; then
-  echo "没有找到超过1周未修改的文件或目录。"
+  echo "No files or directories not modified in the last 7 days were found."
   exit 0
 fi
 
-# 显示找到的文件或目录列表，并使用less/more进行预览
-# 使用其他颜色显示目录以区分
+# Display the list of found files or directories and preview using less/more
+# Highlight directories with a different color for distinction
 color_reset="\e[0m"
 color_dir="\e[1;34m"
 
@@ -28,15 +28,16 @@ formatted_files_to_delete=$(echo "$files_to_delete" | while IFS= read -r line; d
   fi
 done)
 
-echo -e "以下是超过1周未修改的文件或目录：\n$formatted_files_to_delete" | less
+echo -e "The following files or directories have not been modified in the last 7 days:\n$formatted_files_to_delete" | less
 
-# 要求用户确认删除
-read -p "是否确认删除这些文件或目录？(y/n): " confirm
+# Ask user for confirmation before deleting
+read -p "Do you want to delete these files or directories? (y/n): " confirm
 
-# 根据用户输入进行操作
+# Perform action based on user input
 if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
   echo "$files_to_delete" | xargs -d '\n' rm -r
-  echo "文件或目录已删除。"
+  echo "Files or directories have been deleted."
 else
-  echo "操作已取消。"
+  echo "Operation cancelled."
 fi
+
